@@ -236,11 +236,6 @@ public:
         }
     }
 
-    void setPlayerScale(sf::Vector2f scale) {
-        if (textureLoaded) {
-            playerSprite.setScale(scale);
-        }
-    }
     // === GETTERY ===
     float getMaxHp() const { return maxHp; }
     float getCurrentHp() const { return currentHp; }
@@ -306,16 +301,6 @@ public:
         std::cout << "Gracz otrzymał " << finalDamage << " obrażeń!" << std::endl;
     }
 
-    void heal(float amount) {
-        if (!isAlive) return;
-
-        float oldHp = currentHp;
-        modifyHp(amount);
-        float healed = currentHp - oldHp;
-
-        std::cout << "Gracz odnowił " << healed << " HP!" << std::endl;
-    }
-
     void updateAttackStatus() {
         canAttack = (attackClock.getElapsedTime().asSeconds() >= attackCooldown);
     }
@@ -330,13 +315,7 @@ public:
         attackClock.restart();
         canAttack = false;
 
-        bool isCritical = (static_cast<float>(rand()) / RAND_MAX) < criticalChance;
         float finalDamage = attackDamage;
-
-        if (isCritical) {
-            finalDamage *= criticalMultiplier;
-            std::cout << "CRITICAL HIT! ";
-        }
 
         std::cout << "Gracz atakuje za " << finalDamage << " obrażeń!" << std::endl;
         return finalDamage;
@@ -361,9 +340,6 @@ public:
         currentHp = maxHp;
         attackDamage = 10.0f;
         attackSpeed = 1.0f;
-        defense = 0.0f;
-        criticalChance = 0.05f;
-        criticalMultiplier = 1.5f;
         attackCooldown = 1.0f / attackSpeed;
         isAlive = true;
         canAttack = true;
