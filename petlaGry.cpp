@@ -15,6 +15,7 @@ using namespace std;
 
 void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic)
 {
+
     sf::Texture circleTexture;
     if (!circleTexture.loadFromFile("assets/circle.png")) {
         std::cerr << "Nie udało się załadować tekstury circle.png" << std::endl;
@@ -31,6 +32,11 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
     std::vector<std::unique_ptr<Enemy>> enemies;
     sf::Clock spawnClock;
     sf::Clock gameTimer; // Zegar do liczenia czasu gry
+
+    PlayerStats a;
+    a.setBarPosition(50,50);
+    a.setBarSize(400,30);
+    a.setHpColors(sf::Color::Green, sf::Color::Yellow, sf::Color::Red);
 
     sf::RectangleShape player(sf::Vector2f(50, 50));
     player.setPosition(100, 100);
@@ -51,9 +57,11 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
                 window.close();
                 return;
             }
+
             if(event.type == sf::Event::KeyPressed) {
                 if(event.key.code == sf::Keyboard::Escape) {
                     // Otwórz menu pauzy
+
                     pauseMenu(window, font, gameRunning, volMenu, volGame, menuMusic, gameMusic);
                     clock.restart(); // Zresetuj zegar po pauzie
                     // Nie resetuj gameTimer - chcemy zachować czas gry
@@ -64,7 +72,7 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
         float dt = clock.restart().asSeconds();
 
         // Sprawdź czy minęło 5 minut (300 sekund)
-        if (!videoPlayed && gameTimer.getElapsedTime().asSeconds() >= 30.0f) {
+        if (!videoPlayed && gameTimer.getElapsedTime().asSeconds() >= 300.0f) {
             videoPlayed = true;
 
             // Wstrzymaj muzykę gry
@@ -148,6 +156,7 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
 
         window.clear(sf::Color(200, 134, 23));
         window.draw(player);
+        a.drawAll(window);
 
         for (auto& enemy : enemies) {
             window.draw(*enemy);
