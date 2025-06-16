@@ -7,10 +7,19 @@
 
 class Enemy : public sf::Drawable {
 public:
-    virtual void update(float dt, sf::Vector2f playerPos) = 0;
+    Enemy() = default; // Domyślny konstruktor
+     virtual void update(float dt, sf::Vector2f playerPos) = 0;
+    void takeDamage(int amount) {
+        health -= amount;
+        if (health < 0) health = 0;
+    }
+    bool isDead() const {
+        return health <= 0;
+    }
     virtual ~Enemy() = default;
-
 protected:
+    int health = 1; // domyślna wartość, zostanie nadpisana przez klasy pochodne
+
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override = 0;
 };
 

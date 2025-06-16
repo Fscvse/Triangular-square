@@ -4,7 +4,10 @@
 CircleEnemy::CircleEnemy(sf::Vector2f pos, sf::Texture& texture) {
     sprite.setTexture(texture);
     sprite.setScale(0.33f, 0.33f); // zmniejszenie rozmiaru na ekranie
-    sprite.setPosition(pos);
+    sf::FloatRect bounds = sprite.getLocalBounds();
+    sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+        sprite.setPosition(pos);
+    health = 80;
 }
 
 void CircleEnemy::update(float dt, sf::Vector2f playerPos) {
@@ -12,7 +15,10 @@ void CircleEnemy::update(float dt, sf::Vector2f playerPos) {
     float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
     if (length != 0)
         direction /= length;
-    sprite.move(direction * 100.f * dt);
+    sprite.move(direction * 60.f * dt);
+    // Obrót w stronę gracza
+    float angle = std::atan2(direction.y, direction.x) * 180 / 3.14159265f;
+    sprite.setRotation(angle);
 }
 
 void CircleEnemy::draw(sf::RenderTarget& target, sf::RenderStates states) const {
