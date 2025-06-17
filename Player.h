@@ -4,6 +4,26 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <vector> // Add this include for std::vector
+
+class PlayerBullet {
+private:
+    sf::Sprite sprite;
+    // sf::Texture texture; // REMOVE THIS - texture will be managed by PlayerStats
+    sf::Vector2f velocity;
+    float speed;
+    bool markedForDeletion;
+
+public:
+    // Modified constructor: takes a const reference to sf::Texture
+    PlayerBullet(sf::Vector2f startPos, sf::Vector2f direction, const sf::Texture& bulletTexture);
+    // Removed: bool loadTexture(const std::string& texturePath);
+    void update(float dt);
+    void draw(sf::RenderTarget& target) const;
+    sf::FloatRect getBounds() const;
+    bool isMarkedForDeletion() const;
+    void markForDeletion();
+};
 
 class PlayerStats {
 private:
@@ -11,9 +31,9 @@ private:
     float currentHp;
     float attackDamage;
     float attackSpeed;
-    float defense;
-    float criticalChance;
-    float criticalMultiplier;
+    std::vector<PlayerBullet> bullets;
+    sf::Clock shootClock;
+    float shootCooldown;
 
     sf::Clock attackClock;
     float attackCooldown;
@@ -26,10 +46,13 @@ private:
     sf::Vector2f playerPosition;
     bool textureLoaded;
 
+    sf::Texture bulletTexture; // NEW: Texture for bullets, loaded once
+    bool bulletTextureLoaded; // NEW: To check if bullet texture is loaded
+
     sf::RectangleShape hpBarBackground;
     sf::RectangleShape hpBarForeground;
     sf::RectangleShape hpBarBorder;
-    sf::Font font;
+    sf::Font font; // You'll need to load a font for this to work
     sf::Text hpText;
     sf::Text statsText;
 
@@ -49,6 +72,12 @@ private:
 
 public:
     PlayerStats(float hp = 200.0f, float atkDmg = 10.0f, float atkSpeed = 1.0f);
+    // NEW: Method to load the bullet texture for PlayerStats
+    bool loadBulletTexture(const std::string& texturePath);
+    void shootBullet(sf::Vector2f direction);
+    void updateBullets(float dt);
+    void drawBullets(sf::RenderTarget& target);
+    std::vector<PlayerBullet>& getBullets();
 
     // GUI
     void setBarPosition(float x, float y);
@@ -67,7 +96,7 @@ public:
     const sf::Sprite& getSprite() const;
     sf::FloatRect getPlayerGlobalBounds() const;
 
-    // Statystyki
+    // Stats
     float getMaxHp() const;
     float getCurrentHp() const;
     float getAttackDamage() const;

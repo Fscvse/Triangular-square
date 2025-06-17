@@ -11,7 +11,9 @@ public:
     void update(float dt, sf::Vector2f playerPos) override;
     void meleeAttackIfInRange(PlayerStats& playerStats);  // Nowa metoda
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
+    void takeDamageSquare(int damage);
+    bool isAlive() const;
+    int getHealth() const;
 
     sf::FloatRect getGlobalBounds() const override;
     sf::Vector2f getPosition() const override;

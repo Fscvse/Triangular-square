@@ -10,7 +10,9 @@ public:
     void update(float dt, sf::Vector2f playerPos) override;
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
     void performAOEAttack(PlayerStats& player);
-
+    void takeDamageCircle(int damage);
+    bool isAlive() const;
+    int getHealth() const;
 
     sf::FloatRect getGlobalBounds() const override;
     sf::Vector2f getPosition() const override;

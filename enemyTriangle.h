@@ -17,6 +17,9 @@ public:
     sf::Vector2f getPosition() const override;
     void BulletCollisions(PlayerStats& player);
 
+    void takeDamageTriangle(int damage);
+    bool isAlive() const;
+    int getHealth() const;
 protected:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 

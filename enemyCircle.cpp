@@ -70,4 +70,17 @@ sf::Vector2f CircleEnemy::getPosition() const {
     return sprite.getPosition();
 }
 
+void CircleEnemy::takeDamageCircle(int damage) {
+    health -= damage;
+    if (health <= 0) {
+        health = 0;
+    }
+}
 
+bool CircleEnemy::isAlive() const {
+    return health > 0;
+}
+
+int CircleEnemy::getHealth() const {
+    return health;
+}

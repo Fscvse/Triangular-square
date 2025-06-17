@@ -82,4 +82,29 @@ void TriangleEnemy::BulletCollisions(PlayerStats& player) {
     bullets.erase(std::remove_if(bullets.begin(), bullets.end(),
     [](const Bullet& b) { return b.isMarkedForDeletion() || b.isOffScreen(); }), bullets.end());
 }
+void TriangleEnemy::takeDamageTriangle(int damage) {
+    health -= damage;
+    if (health <= 0) {
+        health = 0;
+        // Opcjonalnie: ustaw flagę że wróg jest martwy
+        // isDead = true;
+    }
+
+    // Opcjonalny efekt wizualny przy otrzymaniu obrażeń
+    // np. zmiana koloru sprite'a na krótko
+    sprite.setColor(sf::Color::Red);
+    // Możesz dodać timer żeby przywrócić normalny kolor po czasie
+}
+
+// Opcjonalnie dodaj też funkcję sprawdzającą czy wróg żyje
+bool TriangleEnemy::isAlive() const {
+    return health > 0;
+}
+
+// I funkcję getter dla zdrowia
+int TriangleEnemy::getHealth() const {
+    return health;
+}
+
+
 

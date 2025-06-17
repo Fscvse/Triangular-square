@@ -2,10 +2,12 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <cmath>
 
 PlayerStats::PlayerStats(float hp, float atkDmg, float atkSpeed)
     : maxHp(hp), currentHp(hp), attackDamage(atkDmg), attackSpeed(atkSpeed),
-    isAlive(true), canAttack(true), barPosition(10, 10), barSize(300, 25) {
+    isAlive(true), canAttack(true), barPosition(10, 10), barSize(300, 25),
+    textureLoaded(false), bulletTextureLoaded(false), shootCooldown(0.2f) { // Initialize bulletTextureLoaded
 
     attackCooldown = 1.0f / attackSpeed;
 
@@ -14,6 +16,11 @@ PlayerStats::PlayerStats(float hp, float atkDmg, float atkSpeed)
     hpCriticalColor = sf::Color::Red;
     backgroundColor = sf::Color(50, 50, 50);
     borderColor = sf::Color::White;
+
+    // You should load your font here, for example:
+    // if (!font.loadFromFile("assets/arial.ttf")) {
+    //     std::cout << "Error loading font!" << std::endl;
+    // }
 
     initializeGUI();
 }
@@ -33,12 +40,17 @@ void PlayerStats::initializeGUI() {
     hpBarBorder.setOutlineThickness(2);
     hpBarBorder.setOutlineColor(borderColor);
 
-    hpText.setFont(font);
+    // Ensure font is loaded before setting to text objects
+    // if (font.loadFromFile("assets/arial.ttf")) { // Example font loading
+    //     hpText.setFont(font);
+    //     statsText.setFont(font);
+    // } else {
+    //     std::cout << "Error loading font for GUI!" << std::endl;
+    // }
     hpText.setCharacterSize(16);
     hpText.setFillColor(sf::Color::White);
     hpText.setPosition(barPosition.x + 5, barPosition.y + 3);
 
-    statsText.setFont(font);
     statsText.setCharacterSize(14);
     statsText.setFillColor(sf::Color::White);
     statsText.setPosition(barPosition.x, barPosition.y + 40);
@@ -62,9 +74,7 @@ void PlayerStats::updateGUI() {
 
     std::ostringstream statsStream;
     statsStream << "ATK: " << std::fixed << std::setprecision(1) << attackDamage
-                << " | SPD: " << attackSpeed << "/s"
-                << " | DEF: " << defense
-                << " | CRIT: " << std::setprecision(0) << (criticalChance * 100) << "%";
+                << " | SPD: " << attackSpeed << "/s";
     statsText.setString(statsStream.str());
 
     updateAttackStatus();
@@ -79,8 +89,7 @@ void PlayerStats::updateAliveStatus() {
     if (!isAlive) std::cout << "Gracz został pokonany!" << std::endl;
 }
 
-
-// Ustawienie pozycji paska HP
+// Set HP bar position
 void PlayerStats::setBarPosition(float x, float y) {
     barPosition = sf::Vector2f(x, y);
 
@@ -91,7 +100,7 @@ void PlayerStats::setBarPosition(float x, float y) {
     statsText.setPosition(barPosition.x, barPosition.y + 40);
 }
 
-// Ustawienie rozmiaru paska HP
+// Set HP bar size
 void PlayerStats::setBarSize(float width, float height) {
     barSize = sf::Vector2f(width, height);
 
@@ -101,16 +110,16 @@ void PlayerStats::setBarSize(float width, float height) {
     updateGUI();
 }
 
-// Ustawienie kolorów
+// Set HP colors
 void PlayerStats::setHpColors(sf::Color full, sf::Color low, sf::Color critical) {
     hpFullColor = full;
     hpLowColor = low;
     hpCriticalColor = critical;
     updateGUI();
 }
-// === FUNKCJE SPRITE'A GRACZA ===
+// === PLAYER SPRITE FUNCTIONS ===
 
-// Ładowanie tekstury gracza
+// Load player texture
 bool PlayerStats::loadPlayerTexture(const std::string& texturePath) {
     if (playerTexture.loadFromFile(texturePath)) {
         playerSprite.setTexture(playerTexture);
@@ -118,10 +127,10 @@ bool PlayerStats::loadPlayerTexture(const std::string& texturePath) {
         playerSprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
         playerSprite.setPosition(playerPosition);
         textureLoaded = true;
-        std::cout << "Tekstura gracza załadowana pomyślnie: " << texturePath << std::endl;
+        std::cout << "Player texture loaded successfully: " << texturePath << std::endl;
         return true;
     } else {
-        std::cout << "Błąd ładowania tekstury gracza: " << texturePath << std::endl;
+        std::cout << "Error loading player texture: " << texturePath << std::endl;
         textureLoaded = false;
         return false;
     }
@@ -131,7 +140,7 @@ sf::FloatRect PlayerStats::getPlayerGlobalBounds() const {
     return playerSprite.getGlobalBounds();
 }
 
-// Ustawienie pozycji gracza
+// Set player position
 void PlayerStats::setPlayerPosition(float x, float y) {
     playerPosition = sf::Vector2f(x, y);
     if (textureLoaded) {
@@ -146,12 +155,12 @@ void PlayerStats::setPlayerPosition(sf::Vector2f position) {
     }
 }
 
-// Pobieranie pozycji gracza
+// Get player position
 sf::Vector2f PlayerStats::getPlayerPosition() const {
     return playerPosition;
 }
 
-// Ruch gracza
+// Move player
 void PlayerStats::movePlayer(sf::Vector2f direction, float deltaTime, float speed) {
     playerPosition.x += direction.x * speed * deltaTime;
     playerPosition.y += direction.y * speed * deltaTime;
@@ -160,12 +169,12 @@ void PlayerStats::movePlayer(sf::Vector2f direction, float deltaTime, float spee
     }
 }
 
-// Sprawdzenie czy tekstura jest załadowana
+// Check if texture is loaded
 bool PlayerStats::isTextureLoaded() const {
     return textureLoaded;
 }
 
-// Pobieranie sprite'a (do kolizji itp.)
+// Get sprite (for collisions etc.)
 sf::Sprite& PlayerStats::getSprite() {
     return playerSprite;
 }
@@ -174,14 +183,14 @@ const sf::Sprite& PlayerStats::getSprite() const {
     return playerSprite;
 }
 
-// Ustawienie skali sprite'a
+// Set sprite scale
 void PlayerStats::setPlayerScale(float scaleX, float scaleY) {
     if (textureLoaded) {
         playerSprite.setScale(scaleX, scaleY);
     }
 }
 
-// === GETTERY ===
+// === GETTERS ===
 float PlayerStats::getMaxHp() const { return maxHp; }
 float PlayerStats::getCurrentHp() const { return currentHp; }
 float PlayerStats::getAttackDamage() const { return attackDamage; }
@@ -193,7 +202,7 @@ float PlayerStats::getHpPercentage() const {
     return (currentHp / maxHp) * 100.0f;
 }
 
-// === SETTERY ===
+// === SETTERS ===
 void PlayerStats::setMaxHp(float hp) {
     maxHp = std::max(1.0f, hp);
     if (currentHp > maxHp) currentHp = maxHp;
@@ -217,8 +226,7 @@ void PlayerStats::setAttackSpeed(float speed) {
     updateGUI();
 }
 
-
-// === MODYFIKATORY ===
+// === MODIFIERS ===
 void PlayerStats::modifyHp(float amount) {
     setCurrentHp(currentHp + amount);
 }
@@ -235,15 +243,14 @@ void PlayerStats::modifyAttackSpeed(float amount) {
     setAttackSpeed(attackSpeed + amount);
 }
 
-
-// === FUNKCJE AKCJI ===
+// === ACTION FUNCTIONS ===
 void PlayerStats::takeDamage(int damage) {
     if (!isAlive) return;
-
-    float finalDamage = std::max(1.0f, damage - defense);
+    float defense = 0; // Assuming player has no defense for now
+    float finalDamage = std::max(1.0f, static_cast<float>(damage) - defense);
     modifyHp(-finalDamage);
 
-    std::cout << "Gracz otrzymał " << finalDamage << " obrażeń!" << std::endl;
+    std::cout << "Player took " << finalDamage << " damage!" << std::endl;
 }
 
 float PlayerStats::performAttack() {
@@ -258,19 +265,11 @@ float PlayerStats::performAttack() {
 
     float finalDamage = attackDamage;
 
-    std::cout << "Gracz atakuje za " << finalDamage << " obrażeń!" << std::endl;
+    std::cout << "Player attacks for " << finalDamage << " damage!" << std::endl;
     return finalDamage;
 }
 
-void PlayerStats::levelUp(int level) {
-    for (int i = 0; i < level; i++) {
-        modifyMaxHp(20.0f);
-        modifyAttackDamage(2.0f);
-        modifyAttackSpeed(0.1f);
-    }
-    fullHeal();
-    std::cout << "Gracz awansował o " << level << " poziom(ów)!" << std::endl;
-}
+
 
 void PlayerStats::fullHeal() {
     setCurrentHp(maxHp);
@@ -279,7 +278,7 @@ void PlayerStats::fullHeal() {
 void PlayerStats::resetToDefaults() {
     maxHp = 200.0f;
     currentHp = maxHp;
-    attackDamage = 10.0f;
+    attackDamage = 20.0f;
     attackSpeed = 1.0f;
     attackCooldown = 1.0f / attackSpeed;
     isAlive = true;
@@ -288,11 +287,11 @@ void PlayerStats::resetToDefaults() {
     updateGUI();
 }
 
-// === FUNKCJE RYSOWANIA ===
+// === DRAW FUNCTIONS ===
 void PlayerStats::drawGUI(sf::RenderWindow& window) {
-    updateGUI();  // Aktualizacja przed rysowaniem
+    updateGUI(); // Update before drawing
 
-    // Rysowanie elementów paska HP
+    // Draw HP bar elements
     window.draw(hpBarBackground);
     window.draw(hpBarForeground);
     window.draw(hpBarBorder);
@@ -300,7 +299,7 @@ void PlayerStats::drawGUI(sf::RenderWindow& window) {
     window.draw(statsText);
 }
 
-// Rysowanie z możliwością ukrycia statystyk
+// Draw with option to hide stats
 void PlayerStats::drawGUI(sf::RenderWindow& window, bool showStats) {
     updateGUI();
 
@@ -314,16 +313,124 @@ void PlayerStats::drawGUI(sf::RenderWindow& window, bool showStats) {
     }
 }
 
-// Rysowanie tylko gracza (sprite)
+// Draw player (sprite only)
 void PlayerStats::drawPlayer(sf::RenderWindow& window) {
     if (textureLoaded) {
         window.draw(playerSprite);
     }
 }
 
-// Rysowanie wszystkiego - gracza i GUI
+// Draw all - player and GUI
 void PlayerStats::drawAll(sf::RenderWindow& window, bool showStats) {
     drawPlayer(window);
     drawGUI(window, showStats);
+    drawBullets(window); // Ensure bullets are drawn as part of drawAll
 }
 
+// NEW: Load bullet texture for PlayerStats
+bool PlayerStats::loadBulletTexture(const std::string& texturePath) {
+    if (bulletTexture.loadFromFile(texturePath)) {
+        bulletTextureLoaded = true;
+        std::cout << "Bullet texture loaded successfully: " << texturePath << std::endl;
+        return true;
+    } else {
+        std::cout << "Error loading bullet texture: " << texturePath << std::endl;
+        bulletTextureLoaded = false;
+        return false;
+    }
+}
+
+// PlayerBullet constructor
+PlayerBullet::PlayerBullet(sf::Vector2f startPos, sf::Vector2f direction, const sf::Texture& bulletTexture)
+    : speed(300.f), markedForDeletion(false) {
+    sprite.setTexture(bulletTexture); // Assign the pre-loaded texture
+    sf::FloatRect bounds = sprite.getLocalBounds();
+    sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+    sprite.setPosition(startPos);
+
+    // Normalize direction and set velocity
+    float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+    if (length > 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+    velocity = direction * speed;
+}
+
+// Implement shootBullet
+void PlayerStats::shootBullet(sf::Vector2f direction) {
+    // Check cooldown
+    if (shootClock.getElapsedTime().asSeconds() < shootCooldown) {
+        return;
+    }
+
+    // Check if direction is not zero
+    if (direction.x == 0.f && direction.y == 0.f) {
+        return;
+    }
+
+    // Ensure bullet texture is loaded before creating bullets
+    if (!bulletTextureLoaded) {
+        std::cerr << "Cannot shoot: bullet texture not loaded!" << std::endl;
+        return;
+    }
+
+    // Create a bullet from player's position
+    sf::Vector2f bulletStartPos = playerSprite.getPosition(); // Use player sprite's center
+    // Pass the pre-loaded bulletTexture to the PlayerBullet constructor
+    bullets.push_back(PlayerBullet(bulletStartPos, direction, bulletTexture));
+
+    // Reset cooldown
+    shootClock.restart();
+}
+
+// Update bullets
+void PlayerStats::updateBullets(float dt) {
+    for (auto it = bullets.begin(); it != bullets.end();) {
+        it->update(dt);
+
+        // Remove bullets that are off-screen or marked for deletion
+        sf::Vector2f pos = it->getBounds().getPosition();
+        // Assuming a window size of 800x600 for the bounds check
+        if (it->isMarkedForDeletion() ||
+            pos.x < -50 || pos.x > 850 || // Added a small margin
+            pos.y < -50 || pos.y > 650) { // Added a small margin
+            it = bullets.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+// Draw bullets
+void PlayerStats::drawBullets(sf::RenderTarget& target) {
+    for (const auto& bullet : bullets) {
+        bullet.draw(target);
+    }
+}
+
+// Getter for bullets
+std::vector<PlayerBullet>& PlayerStats::getBullets() {
+    return bullets;
+}
+
+// Implementations for PlayerBullet
+void PlayerBullet::update(float dt) {
+    sprite.move(velocity * dt);
+}
+
+void PlayerBullet::draw(sf::RenderTarget& target) const {
+    target.draw(sprite);
+}
+
+sf::FloatRect PlayerBullet::getBounds() const {
+    return sprite.getGlobalBounds();
+}
+
+bool PlayerBullet::isMarkedForDeletion() const {
+    return markedForDeletion;
+}
+
+void PlayerBullet::markForDeletion() {
+    markedForDeletion = true;
+}

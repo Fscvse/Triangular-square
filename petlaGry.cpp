@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#include <cstdlib>  // dla system()
+#include <cstdlib> // dla system()
 
 #include "functions.h"
 #include "enemyCircle.h"
@@ -51,6 +51,9 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
     sf::Clock spawnClock;
     sf::Clock gameTimer; // Zegar do liczenia czasu gry
 
+
+    // --- END NEW ---
+
     PlayerStats player;
     player.setBarPosition(50, 50);
     player.setBarSize(400, 30);
@@ -59,6 +62,12 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
     player.loadPlayerTexture("assets/player.png");
     player.setPlayerScale(0.4f, 0.4f);
     player.setPlayerPosition(400.f, 300.f);
+
+    // Load the bullet texture once for the player
+    if (!player.loadBulletTexture("assets/bullet.png")) {
+        std::cerr << "Failed to load bullet texture! Bullets might not appear." << std::endl;
+        // Handle error, maybe exit or use default shape
+    }
 
     const float moveSpeed = 200.f;
     sf::Clock clock;
@@ -89,6 +98,7 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
             gameMusic.pause();
 
             std::string videoPath = "assets/video.mp4";
+            pauseMenu1(window, font, gameRunning, volMenu, volGame, menuMusic, gameMusic, backgroundTexture, buttonTexture);
 
 #ifdef _WIN32
             system(("start \"\" \"" + videoPath + "\"").c_str());
@@ -100,10 +110,13 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
             std::cout << "Odtwarzanie wideo po 5 minutach gry!" << std::endl;
         }
 
+
+        // --- END NEW ---
+
         // Spawnowanie przeciwników co 2 sekundy
         if (spawnClock.getElapsedTime().asSeconds() > 2.0f) {
             int type = rand() % 3;
-            sf::Vector2f spawnPos(rand() % 750, rand() % 550);
+            sf::Vector2f spawnPos(static_cast<float>(rand() % 750), static_cast<float>(rand() % 550)); // Cast to float
             if (type == 0)
                 enemies.push_back(std::make_unique<CircleEnemy>(spawnPos, circleTexture));
             else if (type == 1)
@@ -122,46 +135,70 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
 
         player.movePlayer(direction, dt * moveSpeed);
 
-        // Atak gracza – naciśnięcie spacji powoduje atak wręcz
-        // if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-        //     if (player.getCanAttack()) {
-        //         float damage = player.performAttack();
+        // Strzelanie - strzałki kierunkowe
+        sf::Vector2f shootDirection(0.f, 0.f);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) shootDirection.x -= 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) shootDirection.x += 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) shootDirection.y -= 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) shootDirection.y += 1.f;
 
-        //         for (auto it = enemies.begin(); it != enemies.end();) {
-        //             // Odległość między graczem a przeciwnikiem
-        //             sf::Vector2f enemyPos = (*it)->getPosition();
-        //             float distance = std::hypot(enemyPos.x - player.getPlayerPosition().x,
-        //                                         enemyPos.y - player.getPlayerPosition().y);
+        if (shootDirection.x != 0.f || shootDirection.y != 0.f) {
+            player.shootBullet(shootDirection);
+        }
 
-        //             // Zasięg ataku wręcz (np. 50 jednostek)
-        //             const float attackRange = 50.f;
-        //             if (distance <= attackRange) {
-        //                 (*it)->takeDamage(damage);
-        //                 std::cout << "Przeciwnik trafiony!" << std::endl;
-        //             }
+        // Aktualizacja pocisków gracza
+        player.updateBullets(dt);
 
-        //             // Usuwanie martwych przeciwników
-        //             if (!(*it)->isAlive()) {
-        //                 it = enemies.erase(it);
-        //             } else {
-        //                 ++it;
-        //             }
-        //         }
-        //     }
-        // }
+        // Sprawdzanie kolizji pocisków gracza z przeciwnikami
+        auto& bullets = player.getBullets();
+        for (auto& bullet : bullets) {
+            for (auto it = enemies.begin(); it != enemies.end();) {
+                if (bullet.getBounds().intersects((*it)->getGlobalBounds())) {
+                    // Zadaj obrażenia w zależności od typu wroga
+                    if (auto* triangle = dynamic_cast<TriangleEnemy*>((*it).get())) {
+                        triangle->takeDamageTriangle(player.getAttackDamage());
+                        if (!triangle->isAlive()) {
+                            it = enemies.erase(it);
+                        } else {
+                            ++it;
+                        }
+                    } else if (auto* circle = dynamic_cast<CircleEnemy*>((*it).get())) {
+                        circle->takeDamageCircle(player.getAttackDamage());
+                        if (!circle->isAlive()) {
+                            it = enemies.erase(it);
+                        } else {
+                            ++it;
+                        }
+                    } else if (auto* square = dynamic_cast<SquareEnemy*>((*it).get())) {
+                        square->takeDamageSquare(player.getAttackDamage());
+                        if (!square->isAlive()) {
+                            it = enemies.erase(it);
+                        } else {
+                            ++it;
+                        }
+                    } else {
+                        ++it; // If no specific enemy type, just move to the next
+                    }
+
+                    bullet.markForDeletion();
+                    break; // Pocisk trafił, nie sprawdzaj dalej dla tego pocisku
+                }
+                else {
+                    ++it;
+                }
+            }
+        }
 
         // Aktualizacja przeciwników
         for (auto& enemy : enemies) {
             enemy->update(dt, player.getPlayerPosition());
 
-            // Sprawdzenie czy TriangleEnemy trafił gracza
             if (auto* triangle = dynamic_cast<TriangleEnemy*>(enemy.get())) {
                 triangle->BulletCollisions(player);
             }
             if (auto* square = dynamic_cast<SquareEnemy*>(enemy.get())) {
                 square->meleeAttackIfInRange(player);
             }
-            // Przykład dynamic_cast, jeśli używasz Enemy* listy:
             if (auto* circle = dynamic_cast<CircleEnemy*>(enemy.get())) {
                 circle->performAOEAttack(player);
             }
@@ -191,7 +228,7 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
         for (auto& enemy : enemies)
             window.draw(*enemy);
 
-        player.drawAll(window);
+        player.drawAll(window); // This already calls drawBullets(window) internally
 
         // Wyświetlanie czasu
         sf::Text timeText;

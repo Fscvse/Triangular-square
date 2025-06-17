@@ -97,4 +97,27 @@ sf::FloatRect SquareEnemy::getGlobalBounds() const {
 sf::Vector2f SquareEnemy::getPosition() const {
     return sprite.getPosition();
 }
+void SquareEnemy::takeDamageSquare(int damage) {
+    health -= damage;
+    if (health <= 0) {
+        health = 0;
+        // Opcjonalnie: ustaw flagę że wróg jest martwy
+        // isDead = true;
+    }
+
+    // Opcjonalny efekt wizualny przy otrzymaniu obrażeń
+    // np. zmiana koloru sprite'a na krótko
+    sprite.setColor(sf::Color::Red);
+    // Możesz dodać timer żeby przywrócić normalny kolor po czasie
+}
+
+// Opcjonalnie dodaj też funkcję sprawdzającą czy wróg żyje
+bool SquareEnemy::isAlive() const {
+    return health > 0;
+}
+
+// I funkcję getter dla zdrowia
+int SquareEnemy::getHealth() const {
+    return health;
+}
 
