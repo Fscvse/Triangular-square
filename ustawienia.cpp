@@ -4,8 +4,12 @@
 
 using namespace std;
 
-void settingsMenu(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic)
+void settingsMenu(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic, sf::Texture& backgroundTexture, sf::Texture& buttonTexture)
 {
+    sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    background.setTexture(&backgroundTexture);
+    background.setTextureRect(sf::IntRect(0, 0, 800, 600)); // Powtarza teksturę na cały ekran
+
     // Tworzenie menu ustawień
     sf::Text settingsMenuText[5];
     string settingsOptions[] = {"menu volume", "in game volume", "back", to_string(static_cast<int>(volMenu*0.1)), std::to_string(static_cast<int>(volGame*0.1))};
@@ -30,7 +34,7 @@ void settingsMenu(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& v
         triangle.setPoint(0, sf::Vector2f(x1, y1));
         triangle.setPoint(1, sf::Vector2f(x2, y2));
         triangle.setPoint(2, sf::Vector2f(x3, y3));
-        triangle.setFillColor(sf::Color::White);
+        triangle.setFillColor(sf::Color(100, 100, 100));
         triangle.setOutlineColor(sf::Color::White);
         triangle.setOutlineThickness(3);
         triangle.setPosition(xpos, ypos);
@@ -142,6 +146,9 @@ void settingsMenu(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& v
 
         // Rysowanie menu pauzy
         window.clear();
+
+        // Rysowanie tła
+        window.draw(background);
 
         // Rysuj tytuł
         window.draw(settingsTitle);

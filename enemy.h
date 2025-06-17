@@ -1,5 +1,6 @@
 #ifndef ENEMY_H
 #define ENEMY_H
+
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -16,6 +17,10 @@ public:
     bool isDead() const {
         return health <= 0;
     }
+
+    virtual sf::FloatRect getGlobalBounds() const = 0;
+    virtual sf::Vector2f getPosition() const = 0;
+
     virtual ~Enemy() = default;
 protected:
     int health = 1; // domyślna wartość, zostanie nadpisana przez klasy pochodne

@@ -9,12 +9,30 @@
 #include "enemyCircle.h"
 #include "enemyTriangle.h"
 #include "enemySquare.h"
-#include "Player.cpp"
+#include "Player.h"
 
 using namespace std;
 
-void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic)
+void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic, sf::Texture& backgroundTexture, sf::Texture& buttonTexture)
 {
+    sf::Texture randTexture;
+    std::vector<std::string> backgroundPaths = {
+        "assets/game_background_1.png",
+        "assets/game_background_2.png",
+        "assets/game_background_3.png",
+    };
+
+    // Losowy wybór tła
+    int randomIndex = rand() % backgroundPaths.size();
+    if (!randTexture.loadFromFile(backgroundPaths[randomIndex])) {
+        std::cerr << "Nie udalo się załadować tekstury tła: " << backgroundPaths[randomIndex] << std::endl;
+    }
+    randTexture.setRepeated(true);
+
+    sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    background.setTexture(&randTexture);
+    background.setTextureRect(sf::IntRect(0, 0, 800, 600));
+
 
     sf::Texture circleTexture;
     if (!circleTexture.loadFromFile("assets/circle.png")) {
@@ -33,72 +51,53 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
     sf::Clock spawnClock;
     sf::Clock gameTimer; // Zegar do liczenia czasu gry
 
-    PlayerStats a;
-    a.setBarPosition(50,50);
-    a.setBarSize(400,30);
-    a.setHpColors(sf::Color::Green, sf::Color::Yellow, sf::Color::Red);
+    PlayerStats player;
+    player.setBarPosition(50, 50);
+    player.setBarSize(400, 30);
+    player.setHpColors(sf::Color::Green, sf::Color::Yellow, sf::Color::Red);
 
-    sf::RectangleShape player(sf::Vector2f(50, 50));
-    player.setPosition(100, 100);
-    player.setFillColor(sf::Color(100, 100, 100));
+    player.loadPlayerTexture("assets/player.png");
+    player.setPlayerScale(0.4f, 0.4f);
+    player.setPlayerPosition(400.f, 300.f);
 
-    sf::Vector2f velocity(0.f, 0.f);
     const float moveSpeed = 200.f;
     sf::Clock clock;
     bool gameRunning = true;
-    bool videoPlayed = false; // Flaga czy wideo już zostało odtworzone
+    bool videoPlayed = false;
 
-    while(window.isOpen() && gameRunning)
+    while (window.isOpen() && gameRunning)
     {
         sf::Event event;
-        while(window.pollEvent(event))
+        while (window.pollEvent(event))
         {
-            if(event.type == sf::Event::Closed) {
+            if (event.type == sf::Event::Closed) {
                 window.close();
                 return;
             }
 
-            if(event.type == sf::Event::KeyPressed) {
-                if(event.key.code == sf::Keyboard::Escape) {
-                    // Otwórz menu pauzy
-
-                    pauseMenu(window, font, gameRunning, volMenu, volGame, menuMusic, gameMusic);
-                    clock.restart(); // Zresetuj zegar po pauzie
-                    // Nie resetuj gameTimer - chcemy zachować czas gry
-                }
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+                pauseMenu(window, font, gameRunning, volMenu, volGame, menuMusic, gameMusic, backgroundTexture, buttonTexture);
+                clock.restart();
             }
         }
 
         float dt = clock.restart().asSeconds();
 
-        // Sprawdź czy minęło 5 minut (300 sekund)
+        // Odtwórz wideo po 5 minutach
         if (!videoPlayed && gameTimer.getElapsedTime().asSeconds() >= 300.0f) {
             videoPlayed = true;
-
-            // Wstrzymaj muzykę gry
             gameMusic.pause();
 
-            // Uruchom plik MP4 - dostosuj ścieżkę do swojego pliku
-            std::string videoPath = "assets/video.mp4"; // Zmień na swoją ścieżkę
+            std::string videoPath = "assets/video.mp4";
 
 #ifdef _WIN32
-                // Windows - użyj domyślnego odtwarzacza
-            std::string command = "start \"\" \"" + videoPath + "\"";
-            system(command.c_str());
+            system(("start \"\" \"" + videoPath + "\"").c_str());
 #elif __APPLE__
-                // macOS
-            std::string command = "open \"" + videoPath + "\"";
-            system(command.c_str());
+            system(("open \"" + videoPath + "\"").c_str());
 #else
-                // Linux
-            std::string command = "xdg-open \"" + videoPath + "\"";
-            system(command.c_str());
+            system(("xdg-open \"" + videoPath + "\"").c_str());
 #endif
-
             std::cout << "Odtwarzanie wideo po 5 minutach gry!" << std::endl;
-
-            // Opcjonalnie: wznów muzykę po krótkiej przerwie
-            // gameMusic.play();
         }
 
         // Spawnowanie przeciwników co 2 sekundy
@@ -114,63 +113,66 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
             spawnClock.restart();
         }
 
-        velocity.x = 0.f;
-        velocity.y = 0.f;
+        // Obsługa ruchu gracza
+        sf::Vector2f direction(0.f, 0.f);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) direction.x -= 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) direction.x += 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) direction.y -= 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) direction.y += 1.f;
 
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-            velocity.x = -moveSpeed;
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-            velocity.x = moveSpeed;
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-            velocity.y = -moveSpeed;
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-            velocity.y = moveSpeed;
+        player.movePlayer(direction, dt * moveSpeed);
 
-        player.move(velocity.x * dt, velocity.y * dt);
-
+        // Aktualizacja przeciwników
         for (auto& enemy : enemies) {
-            enemy->update(dt, player.getPosition());
-        }
-        for (auto& enemy : enemies) {
-            enemy->update(dt, player.getPosition());
+            enemy->update(dt, player.getPlayerPosition());
 
             // Sprawdzenie czy TriangleEnemy trafił gracza
-            TriangleEnemy* triangle = dynamic_cast<TriangleEnemy*>(enemy.get());
-            if (triangle) {
-                for (const auto& bullet : triangle->getBullets()) {
-                    if (bullet.getBounds().intersects(player.getGlobalBounds())) {
-                        // playerHP -= 10; // lub dowolna liczba
-                        // std::cout << "Player hit! HP: " << playerHP << "\n";
-                        // Można dodać logikę usuwania pocisku lub oznaczenia go jako trafiony
-                    }
-                }
+            if (auto* triangle = dynamic_cast<TriangleEnemy*>(enemy.get())) {
+                triangle->BulletCollisions(player);
+            }
+            if (auto* square = dynamic_cast<SquareEnemy*>(enemy.get())) {
+                square->meleeAttackIfInRange(player);
+            }
+            // Przykład dynamic_cast, jeśli używasz Enemy* listy:
+            if (auto* circle = dynamic_cast<CircleEnemy*>(enemy.get())) {
+                circle->performAOEAttack(player);
             }
         }
 
-        // Ograniczenie gracza do granic okna
-        sf::Vector2f pos = player.getPosition();
-        if(pos.x < 0) player.setPosition(0, pos.y);
-        if(pos.y < 0) player.setPosition(pos.x, 0);
-        if(pos.x > 750) player.setPosition(750, pos.y);
-        if(pos.y > 550) player.setPosition(pos.x, 550);
 
-        window.clear(sf::Color(200, 134, 23));
-        window.draw(player);
-        a.drawAll(window);
-
-        for (auto& enemy : enemies) {
-            window.draw(*enemy);
+        if (!player.getIsAlive())
+        {
+            gameOverScreen(window, font, gameRunning, backgroundTexture, buttonTexture);
+            continue;
         }
 
-        // Opcjonalnie: wyświetl licznik czasu
+        // Ograniczenie gracza do granic okna
+        sf::Vector2f pos = player.getPlayerPosition();
+        if (pos.x < 0) pos.x = 0;
+        if (pos.y < 0) pos.y = 0;
+        if (pos.x > 750) pos.x = 750;
+        if (pos.y > 550) pos.y = 550;
+        player.setPlayerPosition(pos.x, pos.y);
+
+        // Rysowanie
+        window.clear(sf::Color(200, 134, 23));
+
+        // Rysowanie tła
+        window.draw(background);
+
+        for (auto& enemy : enemies)
+            window.draw(*enemy);
+
+        player.drawAll(window);
+
+        // Wyświetlanie czasu
         sf::Text timeText;
         timeText.setFont(font);
         timeText.setCharacterSize(24);
         timeText.setFillColor(sf::Color::White);
-        int minutes = (int)(gameTimer.getElapsedTime().asSeconds() / 60);
-        int seconds = (int)(gameTimer.getElapsedTime().asSeconds()) % 60;
-        timeText.setString("Czas: " + std::to_string(minutes) + ":" +
-                           (seconds < 10 ? "0" : "") + std::to_string(seconds));
+        int minutes = static_cast<int>(gameTimer.getElapsedTime().asSeconds()) / 60;
+        int seconds = static_cast<int>(gameTimer.getElapsedTime().asSeconds()) % 60;
+        timeText.setString("Czas: " + std::to_string(minutes) + ":" + (seconds < 10 ? "0" : "") + std::to_string(seconds));
         timeText.setPosition(10, 10);
         window.draw(timeText);
 

@@ -4,8 +4,12 @@
 
 using namespace std;
 
-void pauseMenu(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic)
+void pauseMenu(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic, sf::Texture& backgroundTexture, sf::Texture& buttonTexture)
 {
+    sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    background.setTexture(&backgroundTexture);
+    background.setTextureRect(sf::IntRect(0, 0, 800, 600)); // Powtarza teksturę na cały ekran
+
     // Tworzenie menu pauzy
     sf::Text pauseMenuText[3];
     string pauseOptions[] = {"resume", "settings", "quit"};
@@ -24,7 +28,7 @@ void pauseMenu(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, int&
     std::vector<sf::RectangleShape> pauseButtons;
     auto makePauseButton = [&](float x, float y, float width, float height) {
         sf::RectangleShape butt(sf::Vector2f(width, height));
-        butt.setFillColor(sf::Color(128, 128, 128));
+        butt.setTexture(&buttonTexture);
         butt.setPosition(x, y);
         return butt;
     };
@@ -67,7 +71,7 @@ void pauseMenu(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, int&
                         inPause = false;
                     }else if(selectedIndex==1) {
                         //settings
-                        settingsMenu(window, font, volMenu, volGame, menuMusic, gameMusic);
+                        settingsMenu(window, font, volMenu, volGame, menuMusic, gameMusic, backgroundTexture, buttonTexture);
                     }else if(selectedIndex == 2) {
                         // Quit to menu
                         gameRunning = false;
@@ -91,7 +95,7 @@ void pauseMenu(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, int&
                         inPause = false;
                     } else if(selectedIndex==1) {
                         //settings
-                        settingsMenu(window, font, volMenu, volGame, menuMusic, gameMusic);
+                        settingsMenu(window, font, volMenu, volGame, menuMusic, gameMusic, backgroundTexture, buttonTexture);
                     } else if(selectedIndex == 2) {
                         // Quit to menu
                         gameRunning = false;
@@ -103,6 +107,9 @@ void pauseMenu(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, int&
 
         // Rysowanie menu pauzy
         window.clear();
+
+        // Rysowanie tła
+        window.draw(background);
 
         // Rysuj półprzezroczyste tło
         window.draw(overlay);

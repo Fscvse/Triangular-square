@@ -11,16 +11,61 @@ CircleEnemy::CircleEnemy(sf::Vector2f pos, sf::Texture& texture) {
 }
 
 void CircleEnemy::update(float dt, sf::Vector2f playerPos) {
-    sf::Vector2f direction = playerPos - sprite.getPosition();
-    float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-    if (length != 0)
-        direction /= length;
-    sprite.move(direction * 60.f * dt);
-    // Obrót w stronę gracza
-    float angle = std::atan2(direction.y, direction.x) * 180 / 3.14159265f;
-    sprite.setRotation(angle);
+    // Aktualizacja ataku
+    attackTimer += dt;
+
+    if (!isAttacking && attackTimer >= attackCooldown) {
+        isAttacking = true;
+        attackTimer = 0.f;
+    }
+
+    if (isAttacking) {
+        sprite.rotate(rotationSpeed * dt);
+
+        if (attackTimer >= attackDuration) {
+            isAttacking = false;
+            attackTimer = 0.f;
+        }
+    } else {
+        // Ruch w stronę gracza tylko gdy nie atakuje
+        sf::Vector2f direction = playerPos - sprite.getPosition();
+        float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+
+        // Minimalna odległość od gracza, w której wróg się zatrzymuje
+        const float stopDistance = 50.f;
+
+        if (length > stopDistance) {
+            direction /= length; // Normalizacja
+            sprite.move(direction * 60.f * dt);
+
+            // Obrót w stronę gracza tylko gdy się porusza
+            float angle = std::atan2(direction.y, direction.x) * 180.f / 3.14159265f;
+            sprite.setRotation(angle);
+        }
+    }
 }
+
+void CircleEnemy::performAOEAttack(PlayerStats& player) {
+    if (!isAttacking) return;
+
+    float distance = std::hypot(player.getPlayerPosition().x - sprite.getPosition().x,
+                                player.getPlayerPosition().y - sprite.getPosition().y);
+
+    if (distance <= aoeRadius) {
+        player.takeDamage(aoeDamage);
+        std::cout << "CircleEnemy zadaje obrażenia obszarowe: " << aoeDamage << std::endl;
+    }
+}
+
 
 void CircleEnemy::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     target.draw(sprite, states);
+}
+
+sf::FloatRect CircleEnemy::getGlobalBounds() const {
+    return sprite.getGlobalBounds();
+}
+
+sf::Vector2f CircleEnemy::getPosition() const {
+    return sprite.getPosition();
 }

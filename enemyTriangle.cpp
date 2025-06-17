@@ -1,5 +1,6 @@
 #include "enemyTriangle.h"
 #include <cmath>
+#include "Player.h"
 
 TriangleEnemy::TriangleEnemy(sf::Vector2f pos, sf::Texture& texture) {
     sprite.setTexture(texture, true);
@@ -26,11 +27,29 @@ void TriangleEnemy::update(float dt, sf::Vector2f playerPos) {
         sprite.move(direction * 50.f * dt); // ← poruszanie sprite’em
     }
 
+    // Dodaj odrzut
+    if (isRecoiling) {
+        float t = recoilClock.getElapsedTime().asSeconds();
+        if (t < recoilDuration) {
+            // interpolacja wygaszania odrzutu
+            float factor = 1.0f - (t / recoilDuration);
+            sprite.move(recoilOffset * factor * dt * 10.f);  // *10 aby był efektowny
+        } else {
+            isRecoiling = false;
+        }
+    }
+
     // Strzelanie
     if (fireClock.getElapsedTime().asSeconds() >= 3.f) {
         bullets.emplace_back(sprite.getPosition(), direction);
         fireClock.restart();
+
+        // Odrzut w przeciwnym kierunku
+        recoilOffset = -direction * 10.f;  // cofnij o 10 pikseli
+        isRecoiling = true;
+        recoilClock.restart();
     }
+
 
     for (auto& bullet : bullets)
         bullet.update(dt);
@@ -44,3 +63,23 @@ void TriangleEnemy::draw(sf::RenderTarget& target, sf::RenderStates states) cons
     for (const auto& bullet : bullets)
         target.draw(bullet, states);
 }
+
+sf::FloatRect TriangleEnemy::getGlobalBounds() const {
+    return sprite.getGlobalBounds();
+}
+
+sf::Vector2f TriangleEnemy::getPosition() const {
+    return sprite.getPosition();
+}
+
+void TriangleEnemy::BulletCollisions(PlayerStats& player) {
+    for (auto& bullet : bullets) {
+        if (bullet.getBounds().intersects(player.getPlayerGlobalBounds())) {
+            player.takeDamage(attackDamage);
+            bullet.markForDeletion(); // musisz zaimplementować
+        }
+    }
+    bullets.erase(std::remove_if(bullets.begin(), bullets.end(),
+    [](const Bullet& b) { return b.isMarkedForDeletion() || b.isOffScreen(); }), bullets.end());
+}
+

@@ -45,6 +45,24 @@ int main()
         return 1;
     }
 
+    sf::Texture backgroundTexture;
+    if (!backgroundTexture.loadFromFile("assets/menu_background.png")) {
+        std::cerr << "Nie udało się załadować tekstury tła!" << std::endl;
+        return 1;
+    }
+    backgroundTexture.setRepeated(true);
+
+    sf::Texture buttonTexture;
+    if (!buttonTexture.loadFromFile("assets/button.png")) {
+        std::cerr << "Nie udało się załadować tekstury przycisku!" << std::endl;
+        return 1;
+    }
+
+    sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    background.setTexture(&backgroundTexture);
+    background.setTextureRect(sf::IntRect(0, 0, 800, 600)); // Powtarza teksturę na cały ekran
+
+
     // Tworzenie napisów
     sf::Text menu[3];
     string options[] = {"play", "settings", "exit"};
@@ -63,7 +81,7 @@ int main()
     std::vector<sf::RectangleShape> buttons;
     auto makeButton = [&](float x, float y, float width, float height) {
         sf::RectangleShape butt(sf::Vector2f(width, height));
-        butt.setFillColor(sf::Color(128, 128, 128));
+        butt.setTexture(&buttonTexture);
         butt.setPosition(x, y);
         return butt;
     };
@@ -104,7 +122,7 @@ int main()
                             inGame = true;
                         } else if(selectedIndex == 1){
                             // Settings
-                            settingsMenu(window, font, volMenu, volGame, menuMusic, gameMusic);
+                            settingsMenu(window, font, volMenu, volGame, menuMusic, gameMusic, backgroundTexture, buttonTexture);
                         } else if(selectedIndex == 2){
                             // Exit
                             window.close();
@@ -127,7 +145,7 @@ int main()
                             inGame = true;
                         } else if(selectedIndex == 1){
                             // Settings
-                            settingsMenu(window, font, volMenu, volGame, menuMusic, gameMusic);
+                            settingsMenu(window, font, volMenu, volGame, menuMusic, gameMusic, backgroundTexture, buttonTexture);
                         } else if(selectedIndex == 2){
                             // Exit
                             window.close();
@@ -138,6 +156,9 @@ int main()
 
             // Rysowanie menu
             window.clear();
+
+            // Rysowanie tła
+            window.draw(background);
 
             // Rysuj tytuł
             window.draw(pausedTitle);
@@ -160,7 +181,7 @@ int main()
 
         } else {
             // === GRA ===
-            gameLoop(window, font, volMenu, volGame, menuMusic, gameMusic);
+            gameLoop(window, font, volMenu, volGame, menuMusic, gameMusic, backgroundTexture, buttonTexture);
 
             // Po wyjściu z gry, wróć do menu
             inGame = false;
