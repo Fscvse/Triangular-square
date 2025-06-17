@@ -16,6 +16,7 @@ public:
     sf::FloatRect getGlobalBounds() const override;
     sf::Vector2f getPosition() const override;
     void BulletCollisions(PlayerStats& player);
+
 protected:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 

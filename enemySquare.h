@@ -12,6 +12,7 @@ public:
     void meleeAttackIfInRange(PlayerStats& playerStats);  // Nowa metoda
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
+
     sf::FloatRect getGlobalBounds() const override;
     sf::Vector2f getPosition() const override;
 

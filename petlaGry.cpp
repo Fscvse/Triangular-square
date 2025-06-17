@@ -122,6 +122,34 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
 
         player.movePlayer(direction, dt * moveSpeed);
 
+        // Atak gracza – naciśnięcie spacji powoduje atak wręcz
+        // if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+        //     if (player.getCanAttack()) {
+        //         float damage = player.performAttack();
+
+        //         for (auto it = enemies.begin(); it != enemies.end();) {
+        //             // Odległość między graczem a przeciwnikiem
+        //             sf::Vector2f enemyPos = (*it)->getPosition();
+        //             float distance = std::hypot(enemyPos.x - player.getPlayerPosition().x,
+        //                                         enemyPos.y - player.getPlayerPosition().y);
+
+        //             // Zasięg ataku wręcz (np. 50 jednostek)
+        //             const float attackRange = 50.f;
+        //             if (distance <= attackRange) {
+        //                 (*it)->takeDamage(damage);
+        //                 std::cout << "Przeciwnik trafiony!" << std::endl;
+        //             }
+
+        //             // Usuwanie martwych przeciwników
+        //             if (!(*it)->isAlive()) {
+        //                 it = enemies.erase(it);
+        //             } else {
+        //                 ++it;
+        //             }
+        //         }
+        //     }
+        // }
+
         // Aktualizacja przeciwników
         for (auto& enemy : enemies) {
             enemy->update(dt, player.getPlayerPosition());

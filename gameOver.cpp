@@ -16,11 +16,11 @@ void gameOverScreen(sf::RenderWindow& window, sf::Font& font, bool& gameRunning,
     quitText.setString("quit");
     quitText.setCharacterSize(75);
     quitText.setPosition(340.f, 325.f);
-    quitText.setFillColor(sf::Color::White);
+    quitText.setFillColor(sf::Color::Red);
 
     // Prostokąt przycisku
     sf::RectangleShape quitButton(sf::Vector2f(400.f, 70.f));
-    quitButton.setFillColor(sf::Color(128, 128, 128));
+    quitButton.setTexture(&buttonTexture);
     quitButton.setPosition(200.f, 350.f);
 
     // Półprzezroczyste tło
@@ -45,16 +45,12 @@ void gameOverScreen(sf::RenderWindow& window, sf::Font& font, bool& gameRunning,
         }
 
         // Obsługa myszy
-        sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-        if (quitButton.getGlobalBounds().contains(mousePos)) {
-            quitText.setFillColor(sf::Color::Red);
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-                //gameRunning = false;
-                inGameOver = false;
-            }
-        } else {
-            quitText.setFillColor(sf::Color::White);
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            gameRunning = false;
+            inGameOver = false;
         }
+
+
 
         // Rysowanie
         window.clear();

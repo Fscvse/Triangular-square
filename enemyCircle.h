@@ -11,8 +11,9 @@ public:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
     void performAOEAttack(PlayerStats& player);
 
+
     sf::FloatRect getGlobalBounds() const override;
-    sf::Vector2f getPosition() const override;   
+    sf::Vector2f getPosition() const override;
 
 private:
     sf::CircleShape shape;

@@ -69,3 +69,5 @@ sf::FloatRect CircleEnemy::getGlobalBounds() const {
 sf::Vector2f CircleEnemy::getPosition() const {
     return sprite.getPosition();
 }
+
+

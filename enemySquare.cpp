@@ -97,3 +97,4 @@ sf::FloatRect SquareEnemy::getGlobalBounds() const {
 sf::Vector2f SquareEnemy::getPosition() const {
     return sprite.getPosition();
 }
+
