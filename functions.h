@@ -9,6 +9,6 @@ void pauseMenu(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, int&
 void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic, sf::Texture& backgroundTexture, sf::Texture& buttonTexture);
 void settingsMenu(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic, sf::Texture& backgroundTexture, sf::Texture& buttonTexture);
 void gameOverScreen(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, sf::Texture& backgroundTexture, sf::Texture& buttonTexture);
-void pauseMenu1(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic, sf::Texture& backgroundTexture, sf::Texture& buttonTexture);
+void VictoryScreen(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, int& volMenu, int& volGame, sf::Music& menuMusic, sf::Music& gameMusic, sf::Texture& backgroundTexture, sf::Texture& buttonTexture);
 
 #endif // FUNCTIONS_H

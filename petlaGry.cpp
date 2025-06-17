@@ -98,7 +98,7 @@ void gameLoop(sf::RenderWindow& window, sf::Font& font, int& volMenu, int& volGa
             gameMusic.pause();
 
             std::string videoPath = "assets/video.mp4";
-            pauseMenu1(window, font, gameRunning, volMenu, volGame, menuMusic, gameMusic, backgroundTexture, buttonTexture);
+            VictoryScreen(window, font, gameRunning, volMenu, volGame, menuMusic, gameMusic, backgroundTexture, buttonTexture);
 
 #ifdef _WIN32
             system(("start \"\" \"" + videoPath + "\"").c_str());

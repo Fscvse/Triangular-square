@@ -390,7 +390,9 @@ void PlayerStats::updateBullets(float dt) {
         it->update(dt);
 
         // Remove bullets that are off-screen or marked for deletion
-        sf::Vector2f pos = it->getBounds().getPosition();
+        sf::FloatRect bounds = it->getBounds();
+        sf::Vector2f pos(bounds.left + bounds.width / 2.f, bounds.top + bounds.height / 2.f);
+
         // Assuming a window size of 800x600 for the bounds check
         if (it->isMarkedForDeletion() ||
             pos.x < -50 || pos.x > 850 || // Added a small margin

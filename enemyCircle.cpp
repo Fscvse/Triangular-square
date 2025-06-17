@@ -8,6 +8,15 @@ CircleEnemy::CircleEnemy(sf::Vector2f pos, sf::Texture& texture) {
     sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
         sprite.setPosition(pos);
     health = 80;
+    // W konstruktorze CircleEnemy
+    if (!spinTexture.loadFromFile("assets/spin.png")) {
+        std::cerr << "Nie udało się załadować spin.png" << std::endl;
+    }
+    spinSprite.setTexture(spinTexture);
+    spinSprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
+    spinSprite.setScale(1.5f, 1.5f);  // dopasuj według potrzeby
+
+    spinSprite.setTextureRect(sf::IntRect(0, 0, frameWidth, frameHeight));
 }
 
 void CircleEnemy::update(float dt, sf::Vector2f playerPos) {
@@ -20,12 +29,22 @@ void CircleEnemy::update(float dt, sf::Vector2f playerPos) {
     }
 
     if (isAttacking) {
-        sprite.rotate(rotationSpeed * dt);
+        sprite.rotate(100 * dt);
 
-        if (attackTimer >= attackDuration) {
-            isAttacking = false;
-            attackTimer = 0.f;
+        animationTimer += dt;
+
+        if (animationTimer >= frameTime) {
+            currentFrame = (currentFrame + 1) % frameCount;
+            spinSprite.setTextureRect(sf::IntRect(currentFrame * frameWidth, 0, frameWidth, frameHeight));
         }
+
+        // KONIEC ATAKU po czasie attackDuration
+        if (animationTimer >= attackDuration) {
+            isAttacking = false;
+            animationTimer = 0.f;
+        }
+
+        spinSprite.setPosition(sprite.getPosition());
     } else {
         // Ruch w stronę gracza tylko gdy nie atakuje
         sf::Vector2f direction = playerPos - sprite.getPosition();
@@ -59,7 +78,11 @@ void CircleEnemy::performAOEAttack(PlayerStats& player) {
 
 
 void CircleEnemy::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    target.draw(sprite, states);
+    target.draw(sprite, states); // główny wróg
+
+    if (isAttacking) {
+        target.draw(spinSprite, states); // dodatkowa animacja
+    }
 }
 
 sf::FloatRect CircleEnemy::getGlobalBounds() const {

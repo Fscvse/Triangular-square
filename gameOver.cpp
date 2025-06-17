@@ -1,7 +1,13 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
-void gameOverScreen(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, sf::Texture& backgroundTexture, sf::Texture& buttonTexture) {
+void gameOverScreen(sf::RenderWindow& window, sf::Font& font, bool& gameRunning, sf::Texture& backgroundTexture, sf::Texture& buttonTexture)
+{
+    sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    background.setTexture(&backgroundTexture);
+    background.setTextureRect(sf::IntRect(0, 0, 800, 600)); // Powtarza teksturę na cały ekran
+
+
     // Tytuł "GAME OVER"
     sf::Text gameOverTitle;
     gameOverTitle.setFont(font);
@@ -54,6 +60,7 @@ void gameOverScreen(sf::RenderWindow& window, sf::Font& font, bool& gameRunning,
 
         // Rysowanie
         window.clear();
+        window.draw(background);
         window.draw(overlay);
         window.draw(gameOverTitle);
         window.draw(quitButton);
